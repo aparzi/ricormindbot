@@ -13,7 +13,7 @@ class ListaManager {
         $db = new DBproprierties();
         $conn = $db->getConnection();
 
-        $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser";
+        $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND cancellato <=> NULL";
 
         $result = mysqli_query($conn, $sql);
         FunctionalityBot::sendMessage($result);
