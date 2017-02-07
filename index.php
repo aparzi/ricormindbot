@@ -6,6 +6,7 @@ require_once './botController/FunctionalityBot.php';
 require_once './utils/Emoticon.php';
 require_once './userController/ObjectManager.php';
 require_once './userController/ListaManager.php';
+require_once './userController/DeleteManager.php';
 
 define('BOT_TOKEN', '304058486:AAEb-CnOf7vJnt_7ZE5d1BOzUc89lbweARA');
 define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
@@ -39,6 +40,7 @@ $updates = json_decode($updates, TRUE);
 //    );
 
 $om = new ObjectManager();
+$dm = new DeleteManager();
 $text = $updates['message']['text'];
 
 switch ($text) {
@@ -68,8 +70,13 @@ switch ($text) {
         $lm->printAllObject($updates['message']['from']['id']);
         break;
 
-    case '/elimini':
-        // to do
+    case '/elimina':
+        $result = $dm->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'elimina');
+        if ($result == TRUE) {
+            FunctionalityBot::sendMessageKeyboardMarkup("Inserisci l'oggetto che vuoi eliminare", array(json_decode('"' . Emoticon::cross() . '"') . " Annulla"));
+        } else {
+            FunctionalityBot::sendMessage("Si è verificato un errore riprovare");
+        }
         break;
 
     case '/help':
@@ -116,6 +123,23 @@ function checkOperation($pIdUser) {
                 } else {
                     global $om;
                     $result = $om->insertObject($pIdUser, $updates);
+                    return $result;
+                }
+                break;
+                
+            case 'elimina':
+                global $text;
+                global $updates;
+                if ($text === json_decode('"' . Emoticon::cross() . '"') . ' Annulla') {
+                    global $dm;
+                    if ($dm->cancelOperation($updates['message']['chat']['id'])) {
+                        FunctionalityBot::removeKeyboard("L' azione è stata annullata " . json_decode('"' . Emoticon::check() . '"'));
+                    } else {
+                        FunctionalityBot::removeKeyboard("Ho riscontrato un errore " . json_decode('"' . Emoticon::danger() . '"'));
+                    }
+                } else {
+                    global $dm;
+                    $result = $dm->deleteObject($pIdUser, $text);
                     return $result;
                 }
                 break;
