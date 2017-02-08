@@ -54,7 +54,10 @@ switch ($text) {
         FunctionalityBot::sendMessage("Ciao " . $updates['message']['from']['first_name'] . " sono un bot che ti aiuta a ricordare dove metti i tuoi oggetti, se non sai come usarmi ricordati"
                 . " di eseguire il comando /help. Buon divertimento." . json_decode('"' . Emoticon::smiley() . '"') . json_decode('"' . Emoticon::smiley() . '"'));
         break;
-
+    
+    case 'test':
+        
+        break;
 
     case '/oggetto':
         $result = $om->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'oggetto');
