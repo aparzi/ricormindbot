@@ -37,13 +37,26 @@ class DeleteManager {
         $db = new DBproprierties();
         $conn = $db->getConnection();
 
-        $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND nome = '$pObject'";
+        $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND nome = '$pObject' and cancellato <=> NULL";
 
         $result = mysqli_query($conn, $sql);
 
         if (mysqli_num_rows($result) == 0) {
-            $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
-            FunctionalityBot::removeKeyboard("L'oggetto $pObject non esiste. Ti consiglio di usare il comando /lista per vedere gli oggetti inseriti " . json_decode('"' . Emoticon::grin() . '"'));
+            
+            $sql = "SELECT * FROM oggetti WHERE nome like '%$pObject%' and cancellato <=> NULL";
+            $result = mysqli_query($conn, $sql);
+            if (mysqli_num_rows($result) == 0) {
+                $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
+                FunctionalityBot::removeKeyboard("L'oggetto <b>$pObject</b> non esiste. Ti consiglio di usare il comando /lista per vedere gli oggetti inseriti " . json_decode('"' . Emoticon::grin() . '"'));
+            } else {
+                // mi creo un array di suggerimenti
+                $hints = array();
+                for ($index = 0; $index < mysqli_num_rows($result); $index++) {
+                    $row = mysqli_fetch_array($result);
+                    $hints[$index] = $row['nome'];
+                }
+                FunctionalityBot::sendMessageKeyboardMarkup("L'oggetto scritto non esiste. Ho questi oggetti simili, se desideri cancellare uno di essi cliccaci sopra altrimenti scrivi un oggetto", $hints);
+            }
         } else {
             $sql = "UPDATE oggetti SET cancellato='true' WHERE id_user = $pIdUser and nome = '$pObject'";
             if (mysqli_query($conn, $sql)) {
