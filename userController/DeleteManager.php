@@ -43,7 +43,7 @@ class DeleteManager {
 
         if (mysqli_num_rows($result) == 0) {
             
-            $sql = "SELECT * FROM oggetti WHERE nome like '%$pObject%' and cancellato <=> NULL";
+            $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND nome like '%$pObject%' and cancellato <=> NULL";
             $result = mysqli_query($conn, $sql);
             if (mysqli_num_rows($result) == 0) {
                 $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
