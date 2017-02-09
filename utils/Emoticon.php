@@ -42,4 +42,12 @@ class Emoticon {
     static public function cross() {
         return "\u274C";
     }
+    
+    static public function flagUk() {
+        return "\uD83C\uDDEC";
+    }
+    
+    static public function flagIt() {
+        return "\uD83C\uDDEE";
+    }
 }
