@@ -15,33 +15,82 @@ $updates = file_get_contents("php://input");
 $updates = json_decode($updates, TRUE);
 
 //$updates = array(
-//        "update_id" => 624792369,
-//        "message" => array(
-//            "message_id" => 1270,
-//            "from" => array(
-//                "id" => 29508113,
-//                "first_name" => "Angelo",
-//                "username" => "Parziale"
-//            ),
-//             "chat" => array(
-//                "id" => 52149724,
-//                 "first_name" => "Angelo",
-//                 "username" => "Parziale",
-//                 "type" => "private"
-//            ),
-//            "date" => 1482502325,
-//            "text" => "standard",
-//            "entities" => array(
-//                "type" => "bot_command",
-//                "offset" => 0,
-//                "length" => 9
-//            )
+//    "update_id" => 624792369,
+//    "message" => array(
+//        "message_id" => 1270,
+//        "from" => array(
+//            "id" => 29508113,
+//            "first_name" => "Angelo",
+//            "username" => "Parziale"
+//        ),
+//        "chat" => array(
+//            "id" => 52149724,
+//            "first_name" => "Angelo",
+//            "username" => "Parziale",
+//            "type" => "private"
+//        ),
+//        "date" => 1482502325,
+//        "text" => "test",
+//        "entities" => array(
+//            "type" => "bot_command",
+//            "offset" => 0,
+//            "length" => 9
 //        )
-//    );
+//    )
+//);
+//
+//$privateMessage = array(
+//    "update_id" => 143859697,
+//    "callback_query" => array(
+//        "id" => "223981359509260125",
+//        "from" => array(
+//            "id" => 52149724,
+//            "first_name" => "Angelo",
+//            "username" => "aparzi"
+//        ),
+//        "message" => array(
+//            "message_id" => 11517,
+//            "from" => array(
+//                "id" => 216729606,
+//                "first_name" => "Json Dump Bot",
+//                "username" => "Json Dump Bot"
+//            ),
+//            "chat" => array(
+//                "id" => 52149724,
+//                "first_name" => "Angelo",
+//                "last_name" => "Parziale",
+//                "username" => "aparzi",
+//                "type" => "private"
+//            ),
+//            "date" => 1486591858,
+//            "text" => "Message with inline keyboard",
+//        ),
+//        "chat_instance" => "-7630782695419680086",
+//        "data" => "Some data"
+//    )
+//);
+
+
+
 
 $om = new ObjectManager();
 $dm = new DeleteManager();
-$text = $updates['message']['text'];
+$callback_query = $updates['callback_query'];
+switch ($callback_query['data']) {
+    case 'ita':
+        $url = API_URL . "sendMessage?parse_mode=HTML&chat_id=" . $callback_query['message']['chat']['id'] . "&text=" . urlencode("lingua italiano");
+        file_get_contents($url);
+        break;
+    
+    case 'eng':
+        $url = API_URL . "sendMessage?parse_mode=HTML&chat_id=" . $callback_query['message']['chat']['id'] . "&text=" . urlencode("lingua inglese");
+        file_get_contents($url);
+        break;
+
+    default :
+        $text = $updates['message']['text'];
+        break;
+}
 
 switch ($text) {
 
@@ -54,9 +103,19 @@ switch ($text) {
         FunctionalityBot::sendMessage("Ciao " . $updates['message']['from']['first_name'] . " sono un bot che ti aiuta a ricordare dove metti i tuoi oggetti, se non sai come usarmi ricordati"
                 . " di eseguire il comando /help. Buon divertimento." . json_decode('"' . Emoticon::smiley() . '"') . json_decode('"' . Emoticon::smiley() . '"'));
         break;
-    
+
     case 'test':
-        
+        $keyboardInline = array(
+            array(
+                "text" => "". json_decode('"' . Emoticon::flagIt() . '"'). " Italiano",
+                "callback_data" => "ita"
+            ),
+            array(
+                "text" => "". json_decode('"' . Emoticon::flagIt() . '"')." Inglese",
+                "callback_data" => "eng"
+            )
+        );
+        FunctionalityBot::sendMessageInlineKeyboard("Seleziona la lingua", $keyboardInline);
         break;
 
     case '/oggetto':
@@ -129,7 +188,7 @@ function checkOperation($pIdUser) {
                     return $result;
                 }
                 break;
-                
+
             case 'elimina':
                 global $text;
                 global $updates;
