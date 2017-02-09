@@ -26,6 +26,18 @@ class FunctionalityBot {
         $this->logError($request);
     }
     
+    public static function sendMessageInlineKeyboard($pMessage, array $pInlineKeyboard) {
+        $updates = file_get_contents("php://input");
+        $updates = json_decode($updates, TRUE);
+        
+        $inlineKeyboard = array('inline_keyboard' => array($pInlineKeyboard));
+        $inlineKeyboard = '&reply_markup=' . json_encode($inlineKeyboard) . '';
+        $url = 'sendMessage?parse_mode=HTML&chat_id=' . $updates['message']['chat']['id'] . '&text=' . urlencode($pMessage) . $inlineKeyboard;
+        $request = new HttpRequest("get", API_URL . $url);
+        $this->logError($request);
+    }
+
+
     public static function removeKeyboard($pMessage) {
         $updates = file_get_contents("php://input");
         $updates = json_decode($updates, TRUE);
