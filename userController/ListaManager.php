@@ -16,7 +16,6 @@ class ListaManager {
         $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND cancellato <=> NULL";
 
         $result = mysqli_query($conn, $sql);
-        FunctionalityBot::sendMessage($result);
         if (mysqli_num_rows($result) == 0) {
             FunctionalityBot::sendMessage("Non ho nessuno oggetto da mostrarti " . json_decode('"' . Emoticon::rage() . '"'));
         } else {
@@ -26,6 +25,24 @@ class ListaManager {
                         . "\n<b>Posizione:</b> " . $row['posizione'] . "\n\n";
                 FunctionalityBot::sendMessage($messaggio);
             }
+        }
+    }
+
+    public function getAllObject($pIdUser) {
+        $db = new DBproprierties();
+        $conn = $db->getConnection();
+
+        $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND cancellato <=> NULL";
+        $result = mysqli_query($conn, $sql);
+        $arrayObject = array();
+        if (mysqli_num_rows($result) == 0) {
+            return $arrayObject;
+        } else {
+            for ($index = 0; $index < mysqli_num_rows($result); $index++) {
+                $row = mysqli_fetch_array($result);
+                $arrayObject[$index] = $row['nome'];
+            }
+            return $arrayObject;
         }
     }
 

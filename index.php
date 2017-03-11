@@ -80,7 +80,7 @@ switch ($callback_query['data']) {
         $url = API_URL . "sendMessage?parse_mode=HTML&chat_id=" . $callback_query['message']['chat']['id'] . "&text=" . urlencode("lingua italiano");
         file_get_contents($url);
         break;
-    
+
     case 'eng':
         // include file eng
         $url = API_URL . "sendMessage?parse_mode=HTML&chat_id=" . $callback_query['message']['chat']['id'] . "&text=" . urlencode("lingua inglese");
@@ -114,6 +114,22 @@ switch ($text) {
             )
         );
         FunctionalityBot::sendMessageInlineKeyboard("Seleziona la lingua", $keyboardInline);
+        break;
+
+    case 'update':
+        $lm = new ListaManager();
+        $arrayObject = $lm->getAllObject($updates['message']['from']['id']);
+        if (empty($arrayObject)) {
+            FunctionalityBot::sendMessage("Non ho nessuno oggetto da mostrarti " . json_decode('"' . Emoticon::rage() . '"'));
+        } else {
+            $result = $om->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'update');
+            if ($result == TRUE) {
+                FunctionalityBot::sendMessageKeyboardMarkup("Clicca su un oggetto per aggiornare la sua posizione", $arrayObject);
+            } else {
+                FunctionalityBot::sendMessage("Si è verificato un errore riprovare");
+            }
+        }
+
         break;
 
     case '/oggetto':
@@ -201,6 +217,49 @@ function checkOperation($pIdUser) {
                     global $dm;
                     $result = $dm->deleteObject($pIdUser, $text);
                     return $result;
+                }
+                break;
+
+            case 'update':
+                global $updates;
+                $db = new DBproprierties();
+                $conn = $db->getConnection();
+                $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser and aggiornato = 'true'";
+                $result = mysqli_query($conn, $sql);
+                if (mysqli_num_rows($result) != 0) {
+                    $sql = "UPDATE oggetti SET posizione = '" . $updates['message']['text'] . "', aggiornato='false' WHERE id_user = $pIdUser and aggiornato = 'true' and cancellato <=> NULL";
+                    if (mysqli_query($conn, $sql)) {
+                        $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
+                        if (mysqli_query($conn, $sql)) {
+                            FunctionalityBot::removeKeyboard("La posizione dell' oggetto è stata aggiornata " . json_decode('"' . Emoticon::grin() . '"'));
+                            return TRUE;
+                        } else {
+                            FunctionalityBot::sendMessage("Ho riscontrato un errore riprovare");
+                            return TRUE;
+                        }
+                    } else {
+                        FunctionalityBot::sendMessage("Ho riscontrato un errore riprovare");
+                        return TRUE;
+                    }
+                } else {
+                    $sql = "SELECT * FROM oggetti WHERE nome = '" . $updates['message']['text'] . "' AND cancellato <=> NULL";
+                    $result = mysqli_query($conn, $sql);
+                    if (mysqli_num_rows($result) == 0) {
+                        $lm = new ListaManager();
+                        $arrayObject = $lm->getAllObject($updates['message']['from']['id']);
+                        FunctionalityBot::sendMessageKeyboardMarkup("Clicca o scrivi un oggetto esistente per aggiornare la sua posizione", $arrayObject);
+                    } else {
+                        $object = mysqli_fetch_array($result);
+                        if ($object['aggiornato'] == "false") {
+                            $sql = "UPDATE oggetti SET aggiornato = 'true' WHERE id_user = $pIdUser and nome = '" . $updates['message']['text'] . "' and cancellato <=> NULL";
+                            if (mysqli_query($conn, $sql)) {
+                                FunctionalityBot::removeKeyboard("Scrivi la sua nuova posizione");
+                                return TRUE;
+                            } else {
+                                FunctionalityBot::sendMessage(mysqli_errno($conn));
+                            }
+                        }
+                    }
                 }
                 break;
         }
