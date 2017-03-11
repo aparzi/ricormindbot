@@ -71,26 +71,24 @@ $updates = json_decode($updates, TRUE);
 //);
 
 
-
-
 $om = new ObjectManager();
 $dm = new DeleteManager();
 $callback_query = $updates['callback_query'];
 switch ($callback_query['data']) {
     case 'ita':
+        // include file ita
         $url = API_URL . "sendMessage?parse_mode=HTML&chat_id=" . $callback_query['message']['chat']['id'] . "&text=" . urlencode("lingua italiano");
         file_get_contents($url);
         break;
     
     case 'eng':
+        // include file eng
         $url = API_URL . "sendMessage?parse_mode=HTML&chat_id=" . $callback_query['message']['chat']['id'] . "&text=" . urlencode("lingua inglese");
         file_get_contents($url);
         break;
-
-    default :
-        $text = $updates['message']['text'];
-        break;
 }
+
+$text = $updates['message']['text'];
 
 switch ($text) {
 
@@ -107,11 +105,11 @@ switch ($text) {
     case 'test':
         $keyboardInline = array(
             array(
-                "text" => "". json_decode('"' . Emoticon::flagIt() . '"'). " Italiano",
+                "text" => "Italiano",
                 "callback_data" => "ita"
             ),
             array(
-                "text" => "". json_decode('"' . Emoticon::flagIt() . '"')." Inglese",
+                "text" => "Inglese",
                 "callback_data" => "eng"
             )
         );
