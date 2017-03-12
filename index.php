@@ -116,22 +116,6 @@ switch ($text) {
         FunctionalityBot::sendMessageInlineKeyboard("Seleziona la lingua", $keyboardInline);
         break;
 
-    case 'update':
-        $lm = new ListaManager();
-        $arrayObject = $lm->getAllObject($updates['message']['from']['id']);
-        if (empty($arrayObject)) {
-            FunctionalityBot::sendMessage("Non ho nessuno oggetto da mostrarti " . json_decode('"' . Emoticon::rage() . '"'));
-        } else {
-            $result = $om->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'update');
-            if ($result == TRUE) {
-                FunctionalityBot::sendMessageKeyboardMarkup("Clicca su un oggetto per aggiornare la sua posizione", $arrayObject);
-            } else {
-                FunctionalityBot::sendMessage("Si è verificato un errore riprovare");
-            }
-        }
-
-        break;
-
     case '/oggetto':
         $result = $om->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'oggetto');
         if ($result == TRUE) {
@@ -146,6 +130,21 @@ switch ($text) {
         $lm->printAllObject($updates['message']['from']['id']);
         break;
 
+    case '/aggiorna':
+        $lm = new ListaManager();
+        $arrayObject = $lm->getAllObject($updates['message']['from']['id']);
+        if (empty($arrayObject)) {
+            FunctionalityBot::sendMessage("Non ho nessuno oggetto da mostrarti " . json_decode('"' . Emoticon::rage() . '"'));
+        } else {
+            $result = $om->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'update');
+            if ($result == TRUE) {
+                FunctionalityBot::sendMessageKeyboardMarkup("Clicca su un oggetto per aggiornare la sua posizione", $arrayObject);
+            } else {
+                FunctionalityBot::sendMessage("Si è verificato un errore riprovare");
+            }
+        }
+        break;
+
     case '/elimina':
         $result = $dm->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'elimina');
         if ($result == TRUE) {
@@ -155,12 +154,29 @@ switch ($text) {
         }
         break;
 
+    case 'posizione':
+        $lm = new ListaManager();
+        $arrayObject = $lm->getAllPosition($updates['message']['from']['id']);
+        if (empty($arrayObject)) {
+            FunctionalityBot::sendMessage("Non ho posizioni da mostrarti. Molto probabilmente non hai oggetti salvati. " . json_decode('"' . Emoticon::rage() . '"'));
+        } else {
+            $result = $om->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'posizione');
+            if ($result == TRUE){
+                FunctionalityBot::sendMessageKeyboardMarkup("In basso ti sono mostrate tutte le posizioni in cui sono contenuti oggetti. Scegliendo o scrivendo una posizione vedrai gli oggetti contenuti all'interno di essa.", $arrayObject);
+            } else {
+                FunctionalityBot::sendMessage("Si è verificato un errore riprovare");
+            }
+        }
+        break;
+
     case '/help':
         $message = json_decode('"' . Emoticon::openBook() . '"') . " <b>Comandi</b>: \n"
                 . "/oggetto: questo comando ti consente di far ricordare un oggetto al bot. \n"
                 . "/lista: questo comando mostra tutti gli oggetti ricordati dal bot compreso il luogo in cui essi si trovano. \n"
+                . "/aggiorna: questo comando ti permette di aggiornare la posizione di un oggetto \n"
                 . "/elimina: questo comando ti consente di far dimenticare un oggetto al bot, in questo modo lui non ricorderà l'oggetto dove si trova. \n\n"
-                . "Cosa aspetti ancora? Ora che hai visto come funziono prova ad usarmi, e ricorda che la memorira è una cosa FONDAMENTALE " . json_decode('"' . Emoticon::wave() . '"');
+                . "Hai suggerimenti? ". json_decode('"' . Emoticon::idea() . '"') ." Hai delle domande? ". json_decode('"' . Emoticon::question() . '"') ." Visita il seguente indirizzo: \n www.angeloparziale.it \n e contattami, se vuoi anche solo per una chiacchierata. \n\n"
+                . "P.s. Ricorda che la memoria è una cosa FONDAMENTALE " . json_decode('"' . Emoticon::wave() . '"');
         FunctionalityBot::sendMessage($message);
         break;
 
@@ -262,6 +278,34 @@ function checkOperation($pIdUser) {
                     }
                 }
                 break;
+
+              case 'posizione':
+                  global $updates;
+                  $db = new DBproprierties();
+                  $conn = $db->getConnection();
+                  $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser and cancellato <=> NULL and posizione = '". $updates['message']['text'] ."'";
+
+                  $result = mysqli_query($conn, $sql);
+                  if (mysqli_num_rows($result) == 0) {
+                    $lm = new ListaManager();
+                    $arrayObject = $lm->getAllPosition($updates['message']['from']['id']);
+                    FunctionalityBot::sendMessageKeyboardMarkup("Clicca o scrivi una posizione esistente per mostrarti gli oggetti.", $arrayObject);
+                  } else {
+                    for ($index = 0; $index < mysqli_num_rows($result); $index++) {
+                        $row = mysqli_fetch_array($result);
+                        $messaggio = "<b>Oggetto:</b> " . $row['nome'] ."\n\n";
+                        FunctionalityBot::sendMessage($messaggio);
+                    }
+                    $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and operazione = 'posizione' and conclusa = 'false'";
+                    if (mysqli_query($conn, $sql)) {
+                        FunctionalityBot::removeKeyboard("Gli oggetti sopra elencati sono tutti all'interno della posizione: <b>". $updates['message']['text'] . "</b>");
+                        return TRUE;
+                    } else {
+                        FunctionalityBot::sendMessage("Ho riscontrato un errore riprovare");
+                        return TRUE;
+                    }
+                  }
+              break;
         }
     }
 }

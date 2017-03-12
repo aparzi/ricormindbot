@@ -46,4 +46,24 @@ class ListaManager {
         }
     }
 
+    public function getAllPosition($pIdUser) {
+      $db = new DBproprierties();
+      $conn = $db->getConnection();
+
+      $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND cancellato <=> NULL";
+      $result = mysqli_query($conn, $sql);
+      $arrayObject = array();
+      if (mysqli_num_rows($result) == 0) {
+          return $arrayObject;
+      } else {
+          for ($index = 0; $index < mysqli_num_rows($result); $index++) {
+              $row = mysqli_fetch_array($result);
+              if (!in_array($row['posizione'], $arrayObject)) {
+                  array_push($arrayObject, $row['posizione']);
+              }
+          }
+          return $arrayObject;
+      }
+    }
+
 }
