@@ -7,6 +7,7 @@ require_once './utils/Emoticon.php';
 require_once './userController/ObjectManager.php';
 require_once './userController/ListaManager.php';
 require_once './userController/DeleteManager.php';
+require_once './userController/CredentialManager.php';
 
 define('BOT_TOKEN', '304058486:AAEb-CnOf7vJnt_7ZE5d1BOzUc89lbweARA');
 define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
@@ -145,6 +146,23 @@ switch ($text) {
         }
         break;
 
+    case '/credenziali':
+        $cm = new CredentialManager();
+        $result = $cm->checkCredentials($updates['message']['from']['id']);
+        if (!$result) {
+          FunctionalityBot::sendMessage("Hai già ricevuto le tue credenziali.");
+        } else {
+          $username = $cm->getUsername($updates['message']['from']['first_name']);
+          $pwd = $cm->getPassword();
+          $result = $cm->saveCredentials($username, $pwd, $updates['message']['from']['id']);
+          if (!$result) {
+            FunctionalityBot::sendMessage("Ho riscontrato un errore!");
+          } else {
+            FunctionalityBot::sendMessage("Le tue credenziali per accedere al portale web, situato a tale indirizzo: www.angeloparziale.it/ricormind, sono: \n<b>username:</b> ". $username ."\n<b>password:</b> ". $pwd ."");
+          }
+        }
+        break;
+
     case '/elimina':
         $result = $dm->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'elimina');
         if ($result == TRUE) {
@@ -174,6 +192,7 @@ switch ($text) {
                 . "/oggetto: questo comando ti consente di far ricordare un oggetto al bot. \n"
                 . "/lista: questo comando mostra tutti gli oggetti ricordati dal bot compreso il luogo in cui essi si trovano. \n"
                 . "/aggiorna: questo comando ti permette di aggiornare la posizione di un oggetto \n"
+                . "/credenziali: questo comando ti permette di ottenere le credenziali di accesso (username e password) per il portale web \n"
                 . "/elimina: questo comando ti consente di far dimenticare un oggetto al bot, in questo modo lui non ricorderà l'oggetto dove si trova. \n\n"
                 . "Hai suggerimenti? ". json_decode('"' . Emoticon::idea() . '"') ." Hai delle domande? ". json_decode('"' . Emoticon::question() . '"') ." Visita il seguente indirizzo: \n www.angeloparziale.it \n e contattami, se vuoi anche solo per una chiacchierata. \n\n"
                 . "P.s. Ricorda che la memoria è una cosa FONDAMENTALE " . json_decode('"' . Emoticon::wave() . '"');
