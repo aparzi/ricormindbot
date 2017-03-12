@@ -158,7 +158,7 @@ switch ($text) {
           if (!$result) {
             FunctionalityBot::sendMessage("Ho riscontrato un errore!");
           } else {
-            FunctionalityBot::sendMessage("Le tue credenziali per accedere al portale web, situato a tale indirizzo: www.angeloparziale.it/ricormind, sono: \n<b>username:</b> ". $username ."\n<b>password:</b> ". $pwd ."");
+            FunctionalityBot::sendMessage("Le tue credenziali per accedere al portale web, situato a tale indirizzo: http://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> ". $username ."\n<b>password:</b> ". $pwd ."");
           }
         }
         break;
