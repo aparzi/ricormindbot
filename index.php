@@ -150,7 +150,12 @@ switch ($text) {
         $cm = new CredentialManager();
         $result = $cm->checkCredentials($updates['message']['from']['id']);
         if (!$result) {
-          FunctionalityBot::sendMessage("Hai già ricevuto le tue credenziali.");
+          $db = new DBproprierties();
+          $conn = $db->getConnection();
+          $sql = "SELECT username, password FROM credenziali WHERE id_user = '". $updates['message']['from']['id'] ."'";
+          $result = mysqli_query($conn, $sql);
+          $credential = mysqli_fetch_assoc($result);
+          FunctionalityBot::sendMessage("Ti ricordo che le credenziali per accedere al portale web: http://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> ". $credential['username'] ."\n<b>password:</b> ". $credential['password'] ."");
         } else {
           $username = $cm->getUsername($updates['message']['from']['first_name']);
           $pwd = $cm->getPassword();
@@ -172,7 +177,7 @@ switch ($text) {
         }
         break;
 
-    case 'posizione':
+    case '/posizione':
         $lm = new ListaManager();
         $arrayObject = $lm->getAllPosition($updates['message']['from']['id']);
         if (empty($arrayObject)) {
@@ -193,7 +198,8 @@ switch ($text) {
                 . "/lista: questo comando mostra tutti gli oggetti ricordati dal bot compreso il luogo in cui essi si trovano. \n"
                 . "/aggiorna: questo comando ti permette di aggiornare la posizione di un oggetto \n"
                 . "/credenziali: questo comando ti permette di ottenere le credenziali di accesso (username e password) per il portale web \n"
-                . "/elimina: questo comando ti consente di far dimenticare un oggetto al bot, in questo modo lui non ricorderà l'oggetto dove si trova. \n\n"
+                . "/elimina: questo comando ti consente di far dimenticare un oggetto al bot, in questo modo lui non ricorderà l'oggetto dove si trova. \n"
+                . "/posizione: questo comando consente di visualizzare oggetti che sono contenuti in una specifica posizione. \n\n"
                 . "Hai suggerimenti? ". json_decode('"' . Emoticon::idea() . '"') ." Hai delle domande? ". json_decode('"' . Emoticon::question() . '"') ." Visita il seguente indirizzo: \n www.angeloparziale.it \n e contattami, se vuoi anche solo per una chiacchierata. \n\n"
                 . "P.s. Ricorda che la memoria è una cosa FONDAMENTALE " . json_decode('"' . Emoticon::wave() . '"');
         FunctionalityBot::sendMessage($message);
