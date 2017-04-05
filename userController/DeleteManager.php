@@ -49,7 +49,8 @@ class DeleteManager {
             $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND nome like '%$pObjectSplit[0]%' and cancellato <=> NULL";
             $result = mysqli_query($conn, $sql);
             if (mysqli_num_rows($result) == 0) {
-                $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
+                $date = Date::getCurrentDate();
+                $sql = "UPDATE users SET conclusa='true', interazione = '$date' WHERE id_user= $pIdUser and conclusa = 'false'";
                 if (mysqli_query($conn, $sql)) {
                     FunctionalityBot::removeKeyboard("L'oggetto <b>$pObject</b> non esiste. Ti consiglio di usare il comando /lista per vedere gli oggetti inseriti " . json_decode('"' . Emoticon::grin() . '"'));
                     return TRUE;
@@ -90,7 +91,8 @@ class DeleteManager {
         } else {
             $sql = "UPDATE oggetti SET cancellato='true' WHERE id_user = $pIdUser and nome = '$pObject'";
             if (mysqli_query($conn, $sql)) {
-                $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
+                $date = Date::getCurrentDate();
+                $sql = "UPDATE users SET conclusa='true', interazione = '$date' WHERE id_user= $pIdUser and conclusa = 'false'";
                 if (mysqli_query($conn, $sql)) {
                     FunctionalityBot::removeKeyboard("L'oggetto è stato cancellato, non ricordo più la sua posizione. " . json_decode('"' . Emoticon::grin() . '"'));
                     return TRUE;

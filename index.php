@@ -8,6 +8,7 @@ require_once './userController/ObjectManager.php';
 require_once './userController/ListaManager.php';
 require_once './userController/DeleteManager.php';
 require_once './userController/CredentialManager.php';
+require_once './utils/Date.php';
 
 define('BOT_TOKEN', '304058486:AAEb-CnOf7vJnt_7ZE5d1BOzUc89lbweARA');
 define('API_URL', 'https://api.telegram.org/bot' . BOT_TOKEN . '/');
@@ -104,7 +105,7 @@ switch ($text) {
         break;
 
     case 'test':
-        $keyboardInline = array(
+        /*$keyboardInline = array(
             array(
                 "text" => "Italiano",
                 "callback_data" => "ita"
@@ -113,8 +114,9 @@ switch ($text) {
                 "text" => "Inglese",
                 "callback_data" => "eng"
             )
-        );
-        FunctionalityBot::sendMessageInlineKeyboard("Seleziona la lingua", $keyboardInline);
+        );*/
+        $date = Date::getCurrentDate();
+        FunctionalityBot::sendMessage("La date di oggi è: ". $date);
         break;
 
     case '/oggetto':
@@ -155,7 +157,7 @@ switch ($text) {
           $sql = "SELECT username, password FROM credenziali WHERE id_user = '". $updates['message']['from']['id'] ."'";
           $result = mysqli_query($conn, $sql);
           $credential = mysqli_fetch_assoc($result);
-          FunctionalityBot::sendMessage("Ti ricordo che le credenziali per accedere al portale web: http://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> ". $credential['username'] ."\n<b>password:</b> ". $credential['password'] ."");
+          FunctionalityBot::sendMessage("Ti ricordo che le credenziali per accedere al portale web: https://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> ". $credential['username'] ."\n<b>password:</b> ". $credential['password'] ."");
         } else {
           $username = $cm->getUsername($updates['message']['from']['first_name']);
           $pwd = $cm->getPassword();
@@ -321,7 +323,8 @@ function checkOperation($pIdUser) {
                         $messaggio = "<b>Oggetto:</b> " . $row['nome'] ."\n\n";
                         FunctionalityBot::sendMessage($messaggio);
                     }
-                    $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and operazione = 'posizione' and conclusa = 'false'";
+                    $date = Date::getCurrentDate();
+                    $sql = "UPDATE users SET conclusa='true', interazione = '$date' WHERE id_user= $pIdUser and operazione = 'posizione' and conclusa = 'false'";
                     if (mysqli_query($conn, $sql)) {
                         FunctionalityBot::removeKeyboard("Gli oggetti sopra elencati sono tutti all'interno della posizione: <b>". $updates['message']['text'] . "</b>");
                         return TRUE;

@@ -8,11 +8,11 @@
 require_once './storage/DBproperties.php';
 
 class ObjectManager {
-    
+
     /**
-     * 
+     *
      * La funzione salva l'operazione scelta dall'utente, in questo caso l'operazione oggetto.
-     * 
+     *
      * @param type $pIdUser
      * @param type $pName
      * @param type $pSurname
@@ -54,7 +54,8 @@ class ObjectManager {
         } else {
             $sql = "UPDATE oggetti SET posizione = '" . $pUpdates['message']['text'] . "' WHERE posizione <=> NULL and id_user = $pIdUser";
             if (mysqli_query($conn, $sql)) {
-                $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
+                $date = Date::getCurrentDate();
+                $sql = "UPDATE users SET conclusa='true', interazione = '$date' WHERE id_user= $pIdUser and conclusa = 'false'";
                 if (mysqli_query($conn, $sql)) {
                     FunctionalityBot::removeKeyboard("Ho memorizzato la posizione dell' oggetto. Sei in una botte di ferro " . json_decode('"' . Emoticon::grin() . '"'));
                     return TRUE;
@@ -70,9 +71,9 @@ class ObjectManager {
     }
 
     /**
-     * 
+     *
      * La funzione permette di annullare l'operazione oggetto all'utente
-     * 
+     *
      * @param type $pIdUser
      * @return boolean
      */
