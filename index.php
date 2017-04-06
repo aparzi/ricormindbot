@@ -105,18 +105,18 @@ switch ($text) {
         break;
 
     case 'test':
-        /*$keyboardInline = array(
-            array(
-                "text" => "Italiano",
-                "callback_data" => "ita"
-            ),
-            array(
-                "text" => "Inglese",
-                "callback_data" => "eng"
-            )
-        );*/
+        /* $keyboardInline = array(
+          array(
+          "text" => "Italiano",
+          "callback_data" => "ita"
+          ),
+          array(
+          "text" => "Inglese",
+          "callback_data" => "eng"
+          )
+          ); */
         $date = Date::getCurrentDate();
-        FunctionalityBot::sendMessage("La date di oggi è: ". $date);
+        FunctionalityBot::sendMessage("La date di oggi è: " . $date);
         break;
 
     case '/oggetto':
@@ -129,8 +129,15 @@ switch ($text) {
         break;
 
     case '/lista':
+        $db = new DBproprierties();
         $lm = new ListaManager();
         $lm->printAllObject($updates['message']['from']['id']);
+        $conn = $db->getConnection();
+        $date = Date::getCurrentDate();
+        $sql = "INSERT INTO users (id_user, firstName, lastName, operazione, conclusa, interazione) VALUES (". $updates['message']['from']['id'] .", '". $updates['message']['from']['first_name'] ."', '". $updates['message']['from']['last_name'] . "', 'lista' ,'true','$date')";
+        if (!mysqli_query($conn, $sql)) {
+            FunctionalityBot::sendMessage("Ho riscontrato un errore riprovare");
+        }
         break;
 
     case '/aggiorna':
@@ -152,21 +159,21 @@ switch ($text) {
         $cm = new CredentialManager();
         $result = $cm->checkCredentials($updates['message']['from']['id']);
         if (!$result) {
-          $db = new DBproprierties();
-          $conn = $db->getConnection();
-          $sql = "SELECT username, password FROM credenziali WHERE id_user = '". $updates['message']['from']['id'] ."'";
-          $result = mysqli_query($conn, $sql);
-          $credential = mysqli_fetch_assoc($result);
-          FunctionalityBot::sendMessage("Ti ricordo che le credenziali per accedere al portale web: https://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> ". $credential['username'] ."\n<b>password:</b> ". $credential['password'] ."");
+            $db = new DBproprierties();
+            $conn = $db->getConnection();
+            $sql = "SELECT username, password FROM credenziali WHERE id_user = '" . $updates['message']['from']['id'] . "'";
+            $result = mysqli_query($conn, $sql);
+            $credential = mysqli_fetch_assoc($result);
+            FunctionalityBot::sendMessage("Ti ricordo che le credenziali per accedere al portale web: https://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> " . $credential['username'] . "\n<b>password:</b> " . $credential['password'] . "");
         } else {
-          $username = $cm->getUsername($updates['message']['from']['first_name']);
-          $pwd = $cm->getPassword();
-          $result = $cm->saveCredentials($username, $pwd, $updates['message']['from']['id']);
-          if (!$result) {
-            FunctionalityBot::sendMessage("Ho riscontrato un errore!");
-          } else {
-            FunctionalityBot::sendMessage("Le tue credenziali per accedere al portale web, situato a tale indirizzo: http://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> ". $username ."\n<b>password:</b> ". $pwd ."");
-          }
+            $username = $cm->getUsername($updates['message']['from']['first_name']);
+            $pwd = $cm->getPassword();
+            $result = $cm->saveCredentials($username, $pwd, $updates['message']['from']['id']);
+            if (!$result) {
+                FunctionalityBot::sendMessage("Ho riscontrato un errore!");
+            } else {
+                FunctionalityBot::sendMessage("Le tue credenziali per accedere al portale web, situato a tale indirizzo: http://gmonuments.altervista.org/ricormind/, sono: \n<b>username:</b> " . $username . "\n<b>password:</b> " . $pwd . "");
+            }
         }
         break;
 
@@ -186,7 +193,7 @@ switch ($text) {
             FunctionalityBot::sendMessage("Non ho posizioni da mostrarti. Molto probabilmente non hai oggetti salvati. " . json_decode('"' . Emoticon::rage() . '"'));
         } else {
             $result = $om->saveOperation($updates['message']['from']['id'], $updates['message']['from']['first_name'], $updates['message']['from']['last_name'], 'posizione');
-            if ($result == TRUE){
+            if ($result == TRUE) {
                 FunctionalityBot::sendMessageKeyboardMarkup("In basso ti sono mostrate tutte le posizioni in cui sono contenuti oggetti. Scegliendo o scrivendo una posizione vedrai gli oggetti contenuti all'interno di essa.", $arrayObject);
             } else {
                 FunctionalityBot::sendMessage("Si è verificato un errore riprovare");
@@ -202,7 +209,7 @@ switch ($text) {
                 . "/credenziali: questo comando ti permette di ottenere le credenziali di accesso (username e password) per il portale web \n"
                 . "/elimina: questo comando ti consente di far dimenticare un oggetto al bot, in questo modo lui non ricorderà l'oggetto dove si trova. \n"
                 . "/posizione: questo comando consente di visualizzare oggetti che sono contenuti in una specifica posizione. \n\n"
-                . "Hai suggerimenti? ". json_decode('"' . Emoticon::idea() . '"') ." Hai delle domande? ". json_decode('"' . Emoticon::question() . '"') ." Visita il seguente indirizzo: \n www.angeloparziale.it \n e contattami, se vuoi anche solo per una chiacchierata. \n\n"
+                . "Hai suggerimenti? " . json_decode('"' . Emoticon::idea() . '"') . " Hai delle domande? " . json_decode('"' . Emoticon::question() . '"') . " Visita il seguente indirizzo: \n www.angeloparziale.it \n e contattami, se vuoi anche solo per una chiacchierata. \n\n"
                 . "P.s. Ricorda che la memoria è una cosa FONDAMENTALE " . json_decode('"' . Emoticon::wave() . '"');
         FunctionalityBot::sendMessage($message);
         break;
@@ -272,7 +279,8 @@ function checkOperation($pIdUser) {
                 if (mysqli_num_rows($result) != 0) {
                     $sql = "UPDATE oggetti SET posizione = '" . $updates['message']['text'] . "', aggiornato='false' WHERE id_user = $pIdUser and aggiornato = 'true' and cancellato <=> NULL";
                     if (mysqli_query($conn, $sql)) {
-                        $sql = "UPDATE users SET conclusa='true' WHERE id_user= $pIdUser and conclusa = 'false'";
+                        $date = Date::getCurrentDate();
+                        $sql = "UPDATE users SET conclusa='true', interazione = '$date' WHERE id_user= $pIdUser and conclusa = 'false'";
                         if (mysqli_query($conn, $sql)) {
                             FunctionalityBot::removeKeyboard("La posizione dell' oggetto è stata aggiornata " . json_decode('"' . Emoticon::grin() . '"'));
                             return TRUE;
@@ -306,34 +314,34 @@ function checkOperation($pIdUser) {
                 }
                 break;
 
-              case 'posizione':
-                  global $updates;
-                  $db = new DBproprierties();
-                  $conn = $db->getConnection();
-                  $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser and cancellato <=> NULL and posizione = '". $updates['message']['text'] ."'";
+            case 'posizione':
+                global $updates;
+                $db = new DBproprierties();
+                $conn = $db->getConnection();
+                $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser and cancellato <=> NULL and posizione = '" . $updates['message']['text'] . "'";
 
-                  $result = mysqli_query($conn, $sql);
-                  if (mysqli_num_rows($result) == 0) {
+                $result = mysqli_query($conn, $sql);
+                if (mysqli_num_rows($result) == 0) {
                     $lm = new ListaManager();
                     $arrayObject = $lm->getAllPosition($updates['message']['from']['id']);
                     FunctionalityBot::sendMessageKeyboardMarkup("Clicca o scrivi una posizione esistente per mostrarti gli oggetti.", $arrayObject);
-                  } else {
+                } else {
                     for ($index = 0; $index < mysqli_num_rows($result); $index++) {
                         $row = mysqli_fetch_array($result);
-                        $messaggio = "<b>Oggetto:</b> " . $row['nome'] ."\n\n";
+                        $messaggio = "<b>Oggetto:</b> " . $row['nome'] . "\n\n";
                         FunctionalityBot::sendMessage($messaggio);
                     }
                     $date = Date::getCurrentDate();
                     $sql = "UPDATE users SET conclusa='true', interazione = '$date' WHERE id_user= $pIdUser and operazione = 'posizione' and conclusa = 'false'";
                     if (mysqli_query($conn, $sql)) {
-                        FunctionalityBot::removeKeyboard("Gli oggetti sopra elencati sono tutti all'interno della posizione: <b>". $updates['message']['text'] . "</b>");
+                        FunctionalityBot::removeKeyboard("Gli oggetti sopra elencati sono tutti all'interno della posizione: <b>" . $updates['message']['text'] . "</b>");
                         return TRUE;
                     } else {
                         FunctionalityBot::sendMessage("Ho riscontrato un errore riprovare");
                         return TRUE;
                     }
-                  }
-              break;
+                }
+                break;
         }
     }
 }
