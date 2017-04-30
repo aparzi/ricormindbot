@@ -45,7 +45,13 @@ class ObjectManager {
         if (mysqli_num_rows($result) == 0) {
             $sql = "INSERT INTO oggetti (nome, id_user) VALUES ('" . $pUpdates['message']['text'] . "', $pIdUser)";
             if (mysqli_query($conn, $sql)) {
-                FunctionalityBot::sendMessage("Inserisci la posizione in cui stai mettendo l'oggetto");
+                $arrayPosition = $this->getAllPosition($pIdUser);
+                if(count($arrayPosition) === 0) {
+                    FunctionalityBot::sendMessage("Scrivi la posizione dove stai posizionando l'oggetto.");
+                } else {
+                    array_push($arrayPosition, json_decode('"' . Emoticon::cross() . '"') . " Annulla");
+                    FunctionalityBot::sendMessageKeyboardMarkup("In basso ti suggerisco alcune posizioni puoi cliccare su una di esse per memorizzare l'oggetto, oppure scriverne una nuova.",$arrayPosition);
+                }
                 return TRUE;
             } else {
                 FunctionalityBot::sendMessage("Ho riscontrato un problema");
@@ -93,6 +99,26 @@ class ObjectManager {
         } else {
             return FALSE;
         }
+    }
+    
+    private function getAllPosition($pIdUser) {
+      $db = new DBproprierties();
+      $conn = $db->getConnection();
+
+      $sql = "SELECT * FROM oggetti WHERE id_user = $pIdUser AND cancellato <=> NULL AND posizione IS NOT NULL";
+      $result = mysqli_query($conn, $sql);
+      $arrayObject = array();
+      if (mysqli_num_rows($result) == 0) {
+          return $arrayObject;
+      } else {
+          for ($index = 0; $index < mysqli_num_rows($result); $index++) {
+              $row = mysqli_fetch_array($result);
+              if (!in_array($row['posizione'], $arrayObject)) {
+                  array_push($arrayObject, $row['posizione']);
+              }
+          }
+          return $arrayObject;
+      }
     }
 
 }
